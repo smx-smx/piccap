@@ -43,9 +43,6 @@ jobs:
     - name: Initialize NDK Environments
       run: env -i bash -c '. /opt/webos-sdk-x86_64/1.0.g/environment-setup-armv7a-neon-webos-linux-gnueabi && env' >> $GITHUB_ENV
 
-    - name: Install WebOS SDK
-      uses: ./.github/actions/setup_webos_sdk@task/ci
-
     - name: Ensure ENV
       run: env
 
