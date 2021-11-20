@@ -67,6 +67,9 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE --target ${{matrix.component}}
     
+    - name: List files
+      run: find .
+
     - name: Upload artifact
       run: echo TODO
 
@@ -100,3 +103,9 @@ jobs:
 
       - name: Package
         run: mkdir build && ares-package ./piccap ./service/piccap.service -o build
+
+      - name: List files
+        run: find .
+
+      - name: Upload artifact
+        run: echo TODO
