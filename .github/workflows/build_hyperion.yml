@@ -24,7 +24,7 @@ jobs:
         submodules: recursive
 
     - name: Install WebOS SDK
-      uses: ./.github/workflows/setup_webos_sdk@v1
+      uses: ./.github/actions/setup_webos_sdk@task/ci
 
     - name: Ensure ENV
       run: env
