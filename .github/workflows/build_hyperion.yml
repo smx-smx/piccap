@@ -23,7 +23,25 @@ jobs:
       with:
         submodules: recursive
 
-    - run: find .
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 12
+
+    - name: Update packages
+      run: sudo apt-get -qq update || true
+
+    - name: Install webOS CLI
+      run: |
+        sudo npm install -g @webosose/ares-cli
+
+    - name: Download webOS NDK
+      run: wget -q https://github.com/webosbrew/meta-lg-webos-ndk/releases/download/1.0.g-rev.4/webos-sdk-x86_64-armv7a-neon-toolchain-1.0.g.sh -P ${{github.workspace}}/temp
+
+    - name: Install webOS NDK
+      run: chmod 755 ${{github.workspace}}/temp/webos-sdk-x86_64-armv7a-neon-toolchain-1.0.g.sh && sudo ${{github.workspace}}/temp/webos-sdk-x86_64-armv7a-neon-toolchain-1.0.g.sh -y
+
+    - name: Initialize NDK Environments
+      run: env -i bash -c '. /opt/webos-sdk-x86_64/1.0.g/environment-setup-armv7a-neon-webos-linux-gnueabi && env' >> $GITHUB_ENV
 
     - name: Install WebOS SDK
       uses: ./.github/actions/setup_webos_sdk@task/ci
