@@ -7,13 +7,16 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build-hyperion-libvtcapture:
-    working_directory: ./hyperion-webos_libvtcapture
+  build-native-components:
     # The CMake configure and build commands are platform agnostic and should work equally
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        component: [hyperion-webos, hyperion-webos_libvtcapture]
 
     steps:
     - uses: actions/checkout@v2
@@ -23,23 +26,60 @@ jobs:
     - name: Install WebOS SDK
       uses: ./.github/workflows/setup_webos_sdk@v1
 
+    - name: Ensure ENV
+      run: env
+
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
       # We'll use this as our working directory for all subsequent commands
-      run: cmake -E make_directory ${{github.workspace}}/build
+      run: cmake -E make_directory ${{github.workspace}}/${{matrix.component}}/build
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}/${{matrix.component}}/build
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWEBOS=ON -DCMAKE_TOOLCHAIN_FILE=/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-webossdk-linux/usr/share/cmake/OEToolchainConfig.cmake
+      run: cmake $GITHUB_WORKSPACE/${{matrix.component}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWEBOS=ON -DCMAKE_TOOLCHAIN_FILE=/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-webossdk-linux/usr/share/cmake/OEToolchainConfig.cmake
 
     - name: Build
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}/${{matrix.component}}/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build . --config $BUILD_TYPE --target hyperion-webos_libvtcapture
+      run: cmake --build . --config $BUILD_TYPE --target ${{matrix.component}}
+    
+    - name: Upload artifact
+      run: echo TODO
+
+  build-piccap:
+    runs-on: ubuntu-latest
+    needs: build-native-components
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Install webOS CLI
+        run: |
+          sudo npm install -g @webosose/ares-cli
+
+      - name: Install dependencies
+        working-directory: ${{github.workspace}}/service
+        run: npm install
+
+      - name: Build App
+        working-directory: ${{github.workspace}}/service
+        run: npm run build
+
+      - name: Copy native module
+        run: echo TODO
+
+      - name: Package
+        run: mkdir build && ares-package ./piccap ./service/piccap.service -o build
