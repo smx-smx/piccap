@@ -23,6 +23,8 @@ jobs:
       with:
         submodules: recursive
 
+    - run: find .
+
     - name: Install WebOS SDK
       uses: ./.github/actions/setup_webos_sdk@task/ci
 
