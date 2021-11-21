@@ -1,0 +1,24 @@
+linux_x64_task:
+  container:
+    dockerfile: .ci/linux/Dockerfile
+
+  env:
+    CIRRUS_CLONE_SUBMODULES: true
+    PATH: /usr/local/bin:${PATH}
+    BUILD_TYPE: Release
+
+  libvtcapture_script:
+    -  . /opt/webos-sdk-x86_64/1.0.g/environment-setup-armv7a-neon-webos-linux-gnueabi
+    - cmake hyperion-webos_libvtcapture -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWEBOS=ON -DCMAKE_TOOLCHAIN_FILE=/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-webossdk-linux/usr/share/cmake/OEToolchainConfig.cmake
+    - cmake --build . --config $BUILD_TYPE
+
+  hyperion_script:
+    -  . /opt/webos-sdk-x86_64/1.0.g/environment-setup-armv7a-neon-webos-linux-gnueabi
+    - cmake hyperion-webos -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWEBOS=ON -DCMAKE_TOOLCHAIN_FILE=/opt/webos-sdk-x86_64/1.0.g/sysroots/x86_64-webossdk-linux/usr/share/cmake/OEToolchainConfig.cmake
+    - cmake --build . --config $BUILD_TYPE
+
+  piccap_script:
+    - cd service
+    - npm install
+    - npm run build
+    - mkdir build && ares-package ./piccap ./service/piccap.service -o build
